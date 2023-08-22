@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block main %}
+    <div class="container pt-5">
+        <div class="row">
+
+        <h1>Prediction Results</h1>
+
+            <table class="table">
+                <thead>
+                <tr>
+                <th scope="col">#</th>
+                <th scope="col">Client Name</th>
+                <th scope="col">Request Date</th>
+                <th scope="col">Estimated Start Date</th>
+                <th scope="col">Vehicle Size</th>
+                <th scope="col">Pickup Postcode</th>
+                <th scope="col">Pickup City/District/Town</th>
+                <th scope="col">Dropoff Postcode</th>
+                <th scope="col">Dropoff City/District/Town</th>
+                <th scope="col">Number of Pickup Points</th>
+                <th scope="col">Number of Shifts Per Day</th>
+                <th scope="col">Number of Trips Per Day</th>
+                <th scope="col">Number of Waits Per Day</th>
+                <th scope="col">Weekday Included?</th>
+                <th scope="col">Weekend Included?</th>
+                <th scope="col">Unsocial Hours Included?</th>
+                <th scope="col">Average Price</th>
+                <th scope="col">Min Price</th>
+                <th scope="col">Max Price</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for data in dataset %}
+                    <tr>
+                    <th scope="row">{{ data.id }}</th>
+                    <td>{{ data.client_name }}</td>
+                    <td>{{ data.request_date }}</td>
+                    <td>{{ data.start_date }}</td>
+                    <td>{{ data.vehicle_size }}</td>
+                    <td>{{ data.pickup_postcode_1 }}</td>
+                    <td>{{ data.pickup_city_1 }}</td>
+                    <td>{{ data.dropoff_postcode_1 }}</td>
+                    <td>{{ data.dropoff_city_1 }}</td>
+                    <td>{{ data.number_pickups }}</td>
+                    <td>{{ data.number_shifts }}</td>
+                    <td>{{ data.number_trips }}</td>
+                    <td>{{ data.number_waits_returns }}</td>
+                    <td>{{ data.weekday }}</td>
+                    <td>{{ data.weekend }}</td>
+                    <td>{{ data.unsociable_hours }}</td>
+                    <td>{{ data.pred_price }}</td>
+                    <td>{{ data.lower_price }}</td>
+                    <td>{{ data.upper_price }}</td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

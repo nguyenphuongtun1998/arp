@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block main %}
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Prediction Results</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h5>Input:</h5>
+                <div>Client Name: <span id="cn"></span></div> 
+                <div>Request Date: <span id="rd"></span></div>
+                <div>Estimated Start Date: <span id="sd"></span></div>
+                <div>Vehicle Size: <span id="vs"></span></div>
+                <div>Pickup Postcode: <span id="pp"></span></div>
+                <div>Pickup City/District/Town: <span id="pc"></span></div>
+                <div>Dropoff Postcode: <span id="dp"></span></div>
+                <div>Dropoff City/District/Town: <span id="dc"></span></div>
+                <div>Number of Pickup Points: <span id="np"></span></div>
+                <div>Number of Shifts Per Day: <span id="ns"></span></div>
+                <div>Number of Trips Per Day: <span id="nt"></span></div>
+                <div>Number of Waits Per Day: <span id="nw"></span></div>
+                <div>Weekday Included?: <span id="wd"></span></div>
+                <div>Weekend Included?: <span id="we"></span></div>
+                <div>Unsocial Hours Included?: <span id="uh"></span></div>
+                <h5 class="pt-3">Average Price Per Day:</h5>
+                <div id="prediction"></div>
+                <h5 class="pt-3">Min Price Per Day:</h5>
+                <div id="prediction_lower"></div>
+                <h5 class="pt-3">Max Price Per Day:</h5>
+                <div id="prediction_upper"></div>                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <a class="btn btn-primary" href="/results" role="button">View DB</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pt-5">
+    <div class="row justify-content-md-center">
+        <div class="col-md-4">
+            <h1>RideTandem Quote Generator</h1>
+            <form action="" id="post-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="client_name">Client Name</label>
+                    <input type="text" class="form-control" id="client_name" placeholder="">
+                </div>
+                <div class="form-group">
+                    <label for="request_date">Request Date*</label>
+                    <input type="date" class="form-control" id="request_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="start_date">Estimated Start Date (if unknown select today)*</label>
+                    <input type="date" class="form-control" id="start_date">
+                </div>
+                <div class="form-group">
+                    <label for="vehicle_size">Vehicle Size*</label>
+                    <input type="number" step="1" class="form-control" id="vehicle_size" placeholder="" required>
+                </div>
+                <div class="form-group">
+                    <label for="pickup_postcode_1">Pickup Postcode (lowercase, general or specific postcode, eg: bs2, bs2 0fx) </label>
+                    <input type="text" class="form-control" id="pickup_postcode_1" placeholder="">
+                </div>
+                <div class="form-group">
+                    <label for="pickup_city_1">Pickup City/District/Town</label>
+                    <select class="form-control select2-autocomplete" id="pickup_city_1">
+                        <option value="" disabled selected>Select a pickup location</option>
+                        {% for location in locations %}
+                          <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dropoff_postcode_1">Dropoff Postcode (lowercase, general or specific postcode, eg: bs2, bs2 0fx)</label>
+                    <input type="text" class="form-control" id="dropoff_postcode_1" placeholder="">
+                </div>
+                <div class="form-group">
+                    <label for="dropoff_city_1">Dropoff City/District/Town</label>
+                    <select class="form-control select2-autocomplete" id="dropoff_city_1">
+                        <option value="" disabled selected>Select a location</option>
+                        {% for location in locations %}
+                          <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="number_pickups">Number of Pickup Points*</label>
+                    <input type="number" step="1" class="form-control" id="number_pickups" placeholder="" required>
+                </div>
+                <div class="form-group">
+                    <label for="number_shifts">Number of Shifts Per Day*</label>
+                    <input type="number" step="1" class="form-control" id="number_shifts" placeholder="" required>
+                </div>
+                <div class="form-group">
+                    <label for="number_trips">Number of Trips Per Day*</label>
+                    <input type="number" step="1" class="form-control" id="number_trips" placeholder="" required>
+                </div>
+                <div class="form-group">
+                    <label for="number_waits_returns">Number of Waits Per Day*</label>
+                    <input type="number" step="1" class="form-control" id="number_waits_returns" placeholder="" required>
+                </div>
+                <div class="form-group">
+                    <label for="weekday">Weekday Included?*</label>
+                    <select class="form-control" id="weekday" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="weekend">Weekend Included?*</label>
+                    <select class="form-control" id="weekend" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="unsociable_hours">Unsocial Hours Included?*</label>
+                    <select class="form-control" id="unsociable_hours" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                <button type="submit" value="Submit" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Include select2 CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+
+<!-- Include jQuery and select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize select2 with autocomplete
+        $('.select2-autocomplete').select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            minimumInputLength: 1,
+        });
+    });
+</script>
+
+<script>
+    $(document).on('submit', '#post-form',function(e){
+        e.preventDefault();
+        $.ajax({
+            type:'POST',
+            url:'{% url "predict:submit_prediction" %}',
+            data:{
+                client_name:$('#client_name').val(),
+                request_date:$('#request_date').val(),
+                start_date:$('#start_date').val(),
+                vehicle_size:$('#vehicle_size').val(),
+                vehicle_size:$('#vehicle_size').val(),
+                pickup_postcode_1:$('#pickup_postcode_1').val(),
+                pickup_city_1:$('#pickup_city_1').val(),
+                dropoff_postcode_1:$('#dropoff_postcode_1').val(),
+                dropoff_city_1:$('#dropoff_city_1').val(),
+                number_pickups:$('#number_pickups').val(),
+                number_shifts:$('#number_shifts').val(),
+                number_trips:$('#number_trips').val(),
+                number_waits_returns:$('#number_waits_returns').val(),
+                weekday:$('#weekday').val(),
+                weekend:$('#weekend').val(), 
+                unsociable_hours:$('#unsociable_hours').val(),                
+                csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+                action: 'post'
+            },
+            success:function(json) {
+                document.forms["post-form"].reset();
+                document.getElementById("prediction").innerHTML = json['result']
+                document.getElementById("prediction_lower").innerHTML = json['result_lower']
+                document.getElementById("prediction_upper").innerHTML = json['result_upper']
+                document.getElementById("cn").innerHTML = json['client_name']
+                document.getElementById("rd").innerHTML = json['request_date']
+                document.getElementById("sd").innerHTML = json['start_date']
+                document.getElementById("vs").innerHTML = json['vehicle_size']
+                document.getElementById("pp").innerHTML = json['pickup_postcode_1']
+                document.getElementById("pc").innerHTML = json['pickup_city_1']
+                document.getElementById("dp").innerHTML = json['dropoff_postcode_1']
+                document.getElementById("dc").innerHTML = json['dropoff_city_1']
+                document.getElementById("np").innerHTML = json['number_pickups']
+                document.getElementById("ns").innerHTML = json['number_shifts']
+                document.getElementById("nt").innerHTML = json['number_trips']
+                document.getElementById("nw").innerHTML = json['number_waits_returns']
+                document.getElementById("wd").innerHTML = json['weekday']
+                document.getElementById("we").innerHTML = json['weekend']
+                document.getElementById("uh").innerHTML = json['unsociable_hours']
+            },
+            error : function(xhr,errmsg,err) {
+
+            }
+        });
+    })
+</script>
+
+{% endblock %}
